@@ -1,0 +1,48 @@
+plugins {
+  id "com.eriwen.gradle.js" version "2.14.1"
+}
+
+apply plugin: 'war'
+
+repositories {
+	mavenCentral()
+}
+
+// task to clean build folder and build war file
+war {
+	println 'Cleaning...'
+	dependsOn << clean
+
+	from "."
+	exclude "**/gradlew"
+	exclude "**/gradlew.bat"
+	exclude "**/*.gradle"
+	exclude "**/gradle"
+	exclude "**/*.git"
+	exclude "**/*.gitignore"
+}
+
+// task to clean war file from local tomcat webapps folder
+task cleanLocalTomcat(type: Delete) {
+	println 'Building war file'
+	dependsOn << war
+	
+	delete System.getenv('TOMCAT_HOME')+"/webapps/Epsilon.war"
+}
+
+// task to deploy war file into local tomcat webapps folder
+task deployLocalTomcat(type: Copy) {
+	println 'Deploy to local Tomcat'
+
+	println ' * Remove old version'
+	dependsOn << cleanLocalTomcat
+	
+	println ' * Copy new version'
+	from "build/libs/Epsilon.war"
+	into System.getenv('TOMCAT_HOME')+"/webapps"
+}
+
+// deploy task
+task deploy {
+	dependsOn << deployLocalTomcat
+}
